@@ -2,12 +2,19 @@ package robinhood
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // BASEURL - Setting this as a global for now
 var BASEURL = "https://api.robinhood.com/"
+
+// Quotes - Struct for holding an array of Quotes
+type Quotes struct {
+	QuotesArray []Quote `json:"results"`
+}
 
 // Quote - Struct for getting symbol and price from API response
 type Quote struct {
@@ -17,33 +24,35 @@ type Quote struct {
 
 // GetQuote - Get last trade price for a list of stocks
 // No return, prints out stock prices
-func GetQuote(symbols []string) {
+func GetQuote(symbols []string) (quotes Quotes, err error) {
 
 	client := &http.Client{}
-	// Iterate through the provided symbols
-	for _, symbol := range symbols {
-		quote := Quote{}
+	quotes = Quotes{}
 
-		// Create the new request (creating request first in the case
-		// that other functions may require headers and such we can keep structure)
-		req, err := http.NewRequest("GET", fmt.Sprintf("%squotes/%s/", BASEURL, symbol), nil)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		// Execute request
-		resp, err := client.Do(req)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		// Decode the body using hte initialized quote object
-		err = json.NewDecoder(resp.Body).Decode(&quote)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		// Print the collected data
-		fmt.Println(fmt.Sprintf("%s: %s", quote.Symbol, quote.Price))
+	if len(symbols) > 1630 {
+		err = errors.New("too many symbols (max 1630)")
+		return
 	}
+
+	// Create the new request
+	req, err := http.NewRequest("GET",
+		fmt.Sprintf("%squotes/?symbols=%s", BASEURL, strings.Join(symbols, ",")),
+		nil)
+	if err != nil {
+		return
+	}
+
+	// Execute request
+	resp, err := client.Do(req)
+	if err != nil {
+		return
+	}
+
+	// Decode the body using the initialized quotes struct
+	err = json.NewDecoder(resp.Body).Decode(&quotes)
+	if err != nil {
+		return
+	}
+
+	return
 }
