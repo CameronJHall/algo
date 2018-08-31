@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/cjhall1283/algo/config"
+	"github.com/cjhall1283/algo/influx"
 	"github.com/cjhall1283/algo/robinhood"
 )
 
@@ -25,6 +26,6 @@ func main() {
 
 	// Print the collected data
 	for _, quote := range quotes.QuotesArray {
-		fmt.Println(fmt.Sprintf("%s: %s", quote.Symbol, quote.Price))
+		influx.PrintQuoteILP(quote)
 	}
 }
