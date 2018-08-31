@@ -26,6 +26,6 @@ func main() {
 
 	// Print the collected data
 	for _, quote := range quotes.QuotesArray {
-		influx.PrintQuoteILP(quote)
+		fmt.Println(influx.GetQuoteILP(quote))
 	}
 }
