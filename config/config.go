@@ -8,7 +8,11 @@ import (
 
 type Config struct {
   Symbols []string `yaml:"symbols"`
-  QuoteFrequency int `yaml:"quoteFrequency"`
+  LiveFrequency int `yaml:"liveFrequency"`
+  HistFrequency string `yaml:"histFrequency"`
+  HistRange string `yaml:"histRange"`
+  Threshold float64 `yaml:"threshold"`
+  CarryoverWeight float64 `yaml:"carryoverWeight"`
 }
 
 func Parse(pathToConfig string) (conf Config, err error) {

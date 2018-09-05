@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cjhall1283/algo/config"
-	"github.com/cjhall1283/algo/influx"
 	"github.com/cjhall1283/algo/robinhood"
 )
 
@@ -31,11 +30,11 @@ func main() {
 		fmt.Println(robinhood.GetInstrumentID(symbol, client))
 	}
 
-	// go liveProducer(conf, client, incomingQuotes)
-	// go algo(incomingQuotes, outgoingDecisions)
-	// go broker(outgoingDecisions)
-	//
-	// select {}
+	go liveProducer(conf, client, incomingQuotes)
+	go algo(incomingQuotes, outgoingDecisions)
+	go broker(outgoingDecisions)
+
+	select {}
 }
 
 func liveProducer(conf config.Config, client *http.Client, c chan robinhood.Quote) {
@@ -48,18 +47,17 @@ func liveProducer(conf config.Config, client *http.Client, c chan robinhood.Quot
 
 		// Insert collected data into the chan
 		for _, quote := range quotes.QuotesArray {
-			fmt.Println(influx.GetQuoteILP(quote))
 			c <- quote
 		}
 
 		// Sleep so we don't overwhelm the API
-		time.Sleep(time.Duration(conf.QuoteFrequency) * time.Second)
+		time.Sleep(time.Duration(conf.LiveFrequency) * time.Second)
 	}
 }
 
 func histProducer(conf config.Config, client *http.Client, c chan robinhood.Quote) {
 	// Collect quotes
-	hist, err := robinhood.GetHistoricalQuotes(conf.Symbols, "day", "year", client)
+	hist, err := robinhood.GetHistoricalQuotes(conf.Symbols, conf.HistFrequency, conf.HistRange, client)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -74,12 +72,22 @@ func histProducer(conf config.Config, client *http.Client, c chan robinhood.Quot
 }
 
 func algo(incomingQuotes chan robinhood.Quote, outgoingDecisions chan map[string]int) {
+	rollingAverages := make(map[string]float64)
 	for {
 		select {
 		case quote := <-incomingQuotes:
 			val, _ := strconv.ParseFloat(quote.LastTradePrice, 64)
-			if val > 300 {
-				outgoingDecisions <- map[string]int{quote.Symbol: 5}
+			if _, exists := rollingAverages[quote.Symbol]; !exists {
+				rollingAverages[quote.Symbol] = val
+			} else {
+				if val > (rollingAverages[quote.Symbol]*1.002) {
+					outgoingDecisions <- map[string]int{quote.Symbol: 5}
+				}
+				if val < (rollingAverages[quote.Symbol]*0.998) {
+					outgoingDecisions <- map[string]int{quote.Symbol: -5}
+				}
+				fmt.Println(fmt.Sprintf("[[%s]] Live: %f Rolling: %f Live/Rolling: %f", quote.Symbol, val, rollingAverages[quote.Symbol], val/rollingAverages[quote.Symbol]))
+				rollingAverages[quote.Symbol] = (rollingAverages[quote.Symbol]*0.9 + val*0.1)
 			}
 		}
 	}

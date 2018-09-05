@@ -1,4 +1,11 @@
 symbols:
   - S
   - NKE
-quoteFrequency: 600 #in seconds
+  - TSLA
+  - MSFT
+liveFrequency: 60 # in seconds
+histFrequency: day # 10minute, day
+histRange: year # day, year
+
+threshold: 0.002 # threshold for triggering buy/sell
+carryoverWeight: 0.1 # weight of the new value in rolling average
