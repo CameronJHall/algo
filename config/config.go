@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-  Symbols []string `yaml:symbols`
+  Symbols []string `yaml:"symbols"`
+  QuoteFrequency int `yaml:"quoteFrequency"`
 }
 
 func Parse(pathToConfig string) (conf Config, err error) {

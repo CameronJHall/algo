@@ -1,3 +1,4 @@
 symbols:
-  - MSFT
-  - TSLA
+  - S
+  - NKE
+quoteFrequency: 600 #in seconds
