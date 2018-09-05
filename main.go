@@ -23,11 +23,15 @@ func main() {
 		Timeout: 5 * time.Second,
 	}
 
-	c := make(chan robinhood.Quote)
-	go histProducer(conf, client, c)
-	go algo(c)
+	for _, symbol := range conf.Symbols {
+		fmt.Println(robinhood.GetInstrumentID(symbol, client))
+	}
 
-	select {}
+	// c := make(chan robinhood.Quote)
+	// go histProducer(conf, client, c)
+	// go algo(c)
+	//
+	// select {}
 }
 
 func algo(c chan robinhood.Quote) {
