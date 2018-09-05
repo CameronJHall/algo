@@ -27,11 +27,15 @@ func main() {
 	incomingQuotes := make(chan robinhood.Quote)
 	outgoingDecisions := make(chan map[string]int)
 
-	go liveProducer(conf, client, incomingQuotes)
-	go algo(incomingQuotes, outgoingDecisions)
-	go broker(outgoingDecisions)
+	for _, symbol := range conf.Symbols {
+		fmt.Println(robinhood.GetInstrumentID(symbol, client))
+	}
 
-	select {}
+	// go liveProducer(conf, client, incomingQuotes)
+	// go algo(incomingQuotes, outgoingDecisions)
+	// go broker(outgoingDecisions)
+	//
+	// select {}
 }
 
 func liveProducer(conf config.Config, client *http.Client, c chan robinhood.Quote) {
