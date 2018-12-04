@@ -1,3 +1,3 @@
 # algo
 
-Experimenting in algorithmic trading with golang
+Experimenting in algorithmic trading with golang.
